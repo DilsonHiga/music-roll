@@ -176,6 +176,30 @@ function drawNotes(
     ctx.stroke();
     ctx.globalAlpha = 1;
   }
+  drawFingerLabels(ctx, layout, notes, mutedVoices);
+}
+
+/** Fingering numbers inside the note rectangles (when annotated and legible). */
+function drawFingerLabels(
+  ctx: CanvasRenderingContext2D,
+  layout: GridLayout,
+  notes: PlacedNote[],
+  mutedVoices?: Set<string>,
+): void {
+  const { rowH, colW, slotTicks } = layout;
+  if (rowH < 10) return;
+  ctx.font = "bold 9px ui-monospace, monospace";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "rgba(0,0,0,0.75)";
+  for (const note of notes) {
+    if (note.finger == null || mutedVoices?.has(note.voiceKey)) continue;
+    const w = (note.durTick / slotTicks) * colW;
+    if (w < 14) continue;
+    const x = layout.tickToX(note.startTick);
+    ctx.fillText(String(note.finger), x + 4, layout.midiToY(note.midi) + rowH / 2);
+  }
+  ctx.textAlign = "left";
 }
 
 function drawSelection(ctx: CanvasRenderingContext2D, layout: GridLayout, note: PlacedNote): void {

@@ -74,6 +74,50 @@ describe("flattenScore", () => {
   });
 });
 
+describe("flattenScore with fingering", () => {
+  const fingered: Score = {
+    format: "music.json",
+    version: "0.2.0",
+    divisions: 480,
+    measures: [{ time: { beats: 4, beatType: 4 } }],
+    parts: [
+      {
+        id: "p",
+        staves: [
+          {
+            id: "s",
+            measures: [
+              {
+                voices: [
+                  {
+                    id: "v",
+                    events: [
+                      { pitches: ["C4"], duration: 480, fingers: [5] },
+                      { pitches: ["E4", "G4"], duration: 480, fingers: [3, null] },
+                      { pitches: ["C5"], duration: 480 },
+                      { pitches: ["C5"], duration: 480, tie: "start", fingers: [1] },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+  it("carries per-pitch fingers onto placed notes", () => {
+    const flat = flattenScore(fingered);
+    const byPitch = new Map(flat.notes.map((n) => [`${n.pitch}@${n.startTick}`, n.finger]));
+    expect(byPitch.get("C4@0")).toBe(5);
+    expect(byPitch.get("E4@480")).toBe(3);
+    expect(byPitch.get("G4@480")).toBeUndefined(); // null entry → no finger
+    expect(byPitch.get("C5@960")).toBeUndefined(); // no fingers array
+    expect(byPitch.get("C5@1440")).toBe(1);
+  });
+});
+
 describe("flattenScore with mergeTies", () => {
   // The two-voices example ties a note across the barline.
   const tied = parseScoreOrThrow(JSON.stringify(twoVoices));

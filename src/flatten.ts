@@ -21,6 +21,8 @@ export interface PlacedNote {
   pitch: string;
   /** `partId.staffId.voiceId` — used to color notes by voice. */
   voiceKey: string;
+  /** Fingering (1 = thumb … 5 = pinky) when the score annotates it. */
+  finger?: number;
 }
 
 export interface MeasureMark {
@@ -118,7 +120,8 @@ export function flattenScore(score: Score, opts: FlattenOpts = {}): FlatScore {
           let t = base;
           for (const ev of voice.events) {
             const tie = ev.tie ?? null;
-            for (const pitch of ev.pitches) {
+            for (let pi = 0; pi < ev.pitches.length; pi++) {
+              const pitch = ev.pitches[pi];
               const midi = pitchToMidi(pitch);
               minMidi = Math.min(minMidi, midi);
               maxMidi = Math.max(maxMidi, midi);
@@ -132,6 +135,7 @@ export function flattenScore(score: Score, opts: FlattenOpts = {}): FlatScore {
                   continue;
                 }
               }
+              const finger = ev.fingers?.[pi];
               const note: PlacedNote = {
                 id: `n${counter++}`,
                 startTick: t,
@@ -139,6 +143,7 @@ export function flattenScore(score: Score, opts: FlattenOpts = {}): FlatScore {
                 midi,
                 pitch,
                 voiceKey,
+                ...(finger != null ? { finger } : {}),
               };
               notes.push(note);
               if (opts.mergeTies && (tie === "start" || tie === "continue")) open.set(key, note);
