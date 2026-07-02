@@ -74,7 +74,17 @@ export function buildMeasureMarks(globals: GlobalMeasure[], divisions: number): 
   return measures;
 }
 
-export function flattenScore(score: Score): FlatScore {
+export interface FlattenOpts {
+  /**
+   * Merge tie chains (`tie: "start" → "continue"* → "stop"`) into single
+   * sustained notes instead of one note per written event. Right for playback
+   * and practice (a tied note is struck once); leave off to mirror the written
+   * events one-to-one.
+   */
+  mergeTies?: boolean;
+}
+
+export function flattenScore(score: Score, opts: FlattenOpts = {}): FlatScore {
   const divisions = score.divisions ?? 480;
   const measures = buildMeasureMarks(score.measures ?? [], divisions);
   const totalTicks = measures.length ? measures[measures.length - 1].endTick : 0;
@@ -83,6 +93,9 @@ export function flattenScore(score: Score): FlatScore {
   const voiceKeys: string[] = [];
   const voiceParts = new Map<string, { part: string; staff: string; voice: string }>();
   const seen = new Set<string>();
+  // Tie-open notes eligible to be extended by the next event: `voice|midi` →
+  // the note whose written duration ends where the continuation starts.
+  const open = new Map<string, PlacedNote>();
   let minMidi = Infinity;
   let maxMidi = -Infinity;
   let counter = 0;
@@ -104,18 +117,31 @@ export function flattenScore(score: Score): FlatScore {
           }
           let t = base;
           for (const ev of voice.events) {
+            const tie = ev.tie ?? null;
             for (const pitch of ev.pitches) {
               const midi = pitchToMidi(pitch);
               minMidi = Math.min(minMidi, midi);
               maxMidi = Math.max(maxMidi, midi);
-              notes.push({
+
+              const key = `${voiceKey}|${midi}`;
+              if (opts.mergeTies && (tie === "stop" || tie === "continue")) {
+                const prev = open.get(key);
+                if (prev && prev.startTick + prev.durTick === t) {
+                  prev.durTick += ev.duration;
+                  if (tie === "stop") open.delete(key);
+                  continue;
+                }
+              }
+              const note: PlacedNote = {
                 id: `n${counter++}`,
                 startTick: t,
                 durTick: ev.duration,
                 midi,
                 pitch,
                 voiceKey,
-              });
+              };
+              notes.push(note);
+              if (opts.mergeTies && (tie === "start" || tie === "continue")) open.set(key, note);
             }
             t += ev.duration;
           }

@@ -61,12 +61,31 @@ export interface PlayerOpts {
   basePeak?: number;
 }
 
+export interface PlayOpts {
+  /** Click on every beat (accented on downbeats), following the tempo map. */
+  metronome?: boolean;
+  /**
+   * With `metronome`, click one full measure (the first measure's meter and
+   * tempo) before the music starts. The playhead sits at tick 0 meanwhile.
+   */
+  countIn?: boolean;
+}
+
+interface Click {
+  /** Seconds relative to the start of the music. */
+  sec: number;
+  accent: boolean;
+}
+
 export class Player {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
   private active: OscillatorNode[] = [];
   private scheduled: ScheduledNote[] = [];
   private timings: MeasureTiming[] = [];
+  private clicks: Click[] = [];
+  private countInClicks: Click[] = [];
+  private countInSec = 0;
   private basePeak: number;
   private totalSec = 0;
   private startTime = 0;
@@ -84,15 +103,35 @@ export class Player {
     this.stop();
     const scale = Math.max(0.05, tempoScale);
 
-    // Build the per-measure tempo map.
+    // Build the per-measure tempo map + the metronome click track.
     this.timings = [];
+    this.clicks = [];
     let sec = 0;
     for (const m of flat.measures) {
       const secPerTick = 60 / m.bpm / flat.divisions / scale;
       this.timings.push({ startTick: m.startTick, endTick: m.endTick, startSec: sec, secPerTick });
+      const beatSec = ((flat.divisions * 4) / m.time.beatType) * secPerTick;
+      for (let b = 0; b < m.time.beats; b++) {
+        this.clicks.push({ sec: sec + b * beatSec, accent: b === 0 });
+      }
       sec += (m.endTick - m.startTick) * secPerTick;
     }
     this.totalSec = sec;
+
+    // Count-in: one measure of clicks in the first measure's meter and tempo.
+    const first = flat.measures[0];
+    const t0 = this.timings[0];
+    if (first && t0) {
+      this.countInSec = (t0.endTick - t0.startTick) * t0.secPerTick;
+      const beatSec = ((flat.divisions * 4) / first.time.beatType) * t0.secPerTick;
+      this.countInClicks = Array.from({ length: first.time.beats }, (_, b) => ({
+        sec: b * beatSec,
+        accent: b === 0,
+      }));
+    } else {
+      this.countInSec = 0;
+      this.countInClicks = [];
+    }
 
     this.scheduled = flat.notes.map((n) => {
       const startSec = this.tickToSec(n.startTick);
@@ -132,7 +171,7 @@ export class Player {
     return this.totalSec;
   }
 
-  play(withSound = true): void {
+  play(withSound = true, opts: PlayOpts = {}): void {
     if (this.playing) return;
     const ctx = new AudioContext();
     this.ctx = ctx;
@@ -145,8 +184,15 @@ export class Player {
     lowpass.Q.value = 0.7;
     this.master.connect(lowpass).connect(ctx.destination);
 
-    const t0 = ctx.currentTime + 0.05;
+    const base = ctx.currentTime + 0.05;
+    const lead = opts.metronome && opts.countIn ? this.countInSec : 0;
+    const t0 = base + lead;
     this.startTime = t0;
+
+    if (opts.metronome) {
+      if (lead > 0) for (const c of this.countInClicks) this.scheduleClick(ctx, base + c.sec, c.accent);
+      for (const c of this.clicks) this.scheduleClick(ctx, t0 + c.sec, c.accent);
+    }
 
     if (withSound) {
       const voice = buildVoice(ctx);
@@ -175,7 +221,23 @@ export class Player {
     this.endTimer = window.setTimeout(() => {
       this.stop();
       this.onEnded?.();
-    }, (this.totalSec + 0.2) * 1000);
+    }, (lead + this.totalSec + 0.2) * 1000);
+  }
+
+  /** A short metronome blip: square wave, higher and louder on the downbeat. */
+  private scheduleClick(ctx: AudioContext, when: number, accent: boolean): void {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "square";
+    osc.frequency.value = accent ? 1800 : 1200;
+    const peak = accent ? 0.4 : 0.25;
+    gain.gain.setValueAtTime(0, when);
+    gain.gain.linearRampToValueAtTime(peak, when + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.001, when + 0.06);
+    osc.connect(gain).connect(this.master!);
+    osc.start(when);
+    osc.stop(when + 0.08);
+    this.active.push(osc);
   }
 
   stop(): void {

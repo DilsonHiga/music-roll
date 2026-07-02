@@ -3,6 +3,7 @@ import type { Score } from "music-json";
 import { parseScoreOrThrow } from "music-json";
 import { buildMeasureMarks, flattenScore, measureTicks } from "./flatten.js";
 import twinkle from "../samples/twinkle.music.json";
+import twoVoices from "music-json/examples/two-voices.music.json";
 
 const score = parseScoreOrThrow(JSON.stringify(twinkle));
 
@@ -70,5 +71,34 @@ describe("flattenScore", () => {
     expect(f.totalTicks).toBe(0);
     expect(f.minMidi).toBe(60);
     expect(f.maxMidi).toBe(72);
+  });
+});
+
+describe("flattenScore with mergeTies", () => {
+  // The two-voices example ties a note across the barline.
+  const tied = parseScoreOrThrow(JSON.stringify(twoVoices));
+  const split = flattenScore(tied);
+  const merged = flattenScore(tied, { mergeTies: true });
+
+  it("joins the C5 tied across the barline into one sustained note", () => {
+    const splitC5 = split.notes.filter((n) => n.pitch === "C5");
+    const mergedC5 = merged.notes.filter((n) => n.pitch === "C5");
+    expect(splitC5.map((n) => [n.startTick, n.durTick])).toEqual([
+      [960, 480],
+      [1440, 960],
+    ]);
+    expect(mergedC5.map((n) => [n.startTick, n.durTick])).toEqual([[960, 1440]]);
+    // Total sounding time is preserved.
+    const sum = (ns: { durTick: number }[]) => ns.reduce((s, n) => s + n.durTick, 0);
+    expect(sum(merged.notes)).toBe(sum(split.notes));
+  });
+
+  it("keeps untied same-pitch restrikes separate", () => {
+    // Voice v2 strikes G4 twice in a row without a tie — both must survive.
+    const g4 = merged.notes.filter((n) => n.pitch === "G4");
+    expect(g4.map((n) => [n.startTick, n.durTick])).toEqual([
+      [480, 480],
+      [960, 480],
+    ]);
   });
 });

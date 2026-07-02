@@ -11,6 +11,7 @@ export {
   measureTicks,
   DEFAULT_TIME,
   DEFAULT_BPM,
+  type FlattenOpts,
   type FlatScore,
   type PlacedNote,
   type MeasureMark,
@@ -32,4 +33,4 @@ export {
   type DraftNote,
 } from "./render.js";
 
-export { Player, type PlayerOpts } from "./player.js";
+export { Player, type PlayerOpts, type PlayOpts } from "./player.js";
