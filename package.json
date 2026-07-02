@@ -1,0 +1,33 @@
+{
+  "name": "music-roll",
+  "version": "0.1.0",
+  "description": "Shared piano-roll engine for .music.json apps: score flattening, grid geometry, canvas rendering, and Web Audio playback",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./samples/*": "./samples/*"
+  },
+  "files": [
+    "dist",
+    "src",
+    "samples"
+  ],
+  "scripts": {
+    "prepare": "node scripts/prepare.mjs",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "keywords": ["music", "piano-roll", "music.json", "canvas", "web-audio"],
+  "license": "MIT",
+  "dependencies": {
+    "music-json": "file:../music-json-spec"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

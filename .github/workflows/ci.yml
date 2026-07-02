@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      # This package depends on the sibling repo via file:../music-json-spec,
+      # so check both out side by side. Assumes the sibling lives under the
+      # same owner with its directory name as the repo name.
+      - uses: actions/checkout@v4
+        with:
+          path: music-roll
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/music-json-spec
+          path: music-json-spec
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - working-directory: music-roll
+        run: npm install
+      - working-directory: music-roll
+        run: npm run typecheck
+      - working-directory: music-roll
+        run: npm test

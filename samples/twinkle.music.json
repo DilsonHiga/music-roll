@@ -1,0 +1,98 @@
+{
+  "format": "music.json",
+  "version": "0.1.0",
+  "divisions": 480,
+  "metadata": {
+    "title": "Twinkle, Twinkle, Little Star",
+    "composer": "Traditional",
+    "lyricist": "Jane Taylor",
+    "copyright": "Public Domain",
+    "tags": ["nursery", "C major", "grand staff"]
+  },
+  "measures": [
+    {
+      "time": { "beats": 4, "beatType": 4 },
+      "key": { "fifths": 0, "mode": "major" },
+      "tempo": { "bpm": 120, "beatUnit": "quarter" },
+      "chords": [{ "position": 0, "root": "C", "quality": "maj", "bass": null, "text": "C" }]
+    },
+    { "chords": [{ "position": 0, "root": "F", "quality": "maj", "bass": null, "text": "F" }] },
+    { "chords": [{ "position": 0, "root": "C", "quality": "maj", "bass": null, "text": "C" }] },
+    { "chords": [{ "position": 0, "root": "G", "quality": "7", "bass": null, "text": "G7" }] }
+  ],
+  "parts": [
+    {
+      "id": "piano",
+      "name": "Piano",
+      "shortName": "Pno.",
+      "staves": [
+        {
+          "id": "treble",
+          "clef": "treble",
+          "measures": [
+            {
+              "voices": [
+                {
+                  "id": "v1",
+                  "events": [
+                    { "pitches": ["C4"], "duration": 480, "type": "quarter", "lyrics": [{ "verse": 1, "text": "Twin", "syllabic": "begin" }] },
+                    { "pitches": ["C4"], "duration": 480, "type": "quarter", "lyrics": [{ "verse": 1, "text": "kle", "syllabic": "end" }] },
+                    { "pitches": ["G4"], "duration": 480, "type": "quarter", "lyrics": [{ "verse": 1, "text": "twin", "syllabic": "begin" }] },
+                    { "pitches": ["G4"], "duration": 480, "type": "quarter", "lyrics": [{ "verse": 1, "text": "kle", "syllabic": "end" }] }
+                  ]
+                }
+              ]
+            },
+            {
+              "voices": [
+                {
+                  "id": "v1",
+                  "events": [
+                    { "pitches": ["A4"], "duration": 480, "type": "quarter", "lyrics": [{ "verse": 1, "text": "lit", "syllabic": "begin" }] },
+                    { "pitches": ["A4"], "duration": 480, "type": "quarter", "lyrics": [{ "verse": 1, "text": "tle", "syllabic": "end" }] },
+                    { "pitches": ["G4"], "duration": 960, "type": "half", "lyrics": [{ "verse": 1, "text": "star", "syllabic": "single" }] }
+                  ]
+                }
+              ]
+            },
+            {
+              "voices": [
+                {
+                  "id": "v1",
+                  "events": [
+                    { "pitches": ["F4"], "duration": 480, "type": "quarter", "lyrics": [{ "verse": 1, "text": "How", "syllabic": "single" }] },
+                    { "pitches": ["F4"], "duration": 480, "type": "quarter", "lyrics": [{ "verse": 1, "text": "I", "syllabic": "single" }] },
+                    { "pitches": ["E4"], "duration": 480, "type": "quarter", "lyrics": [{ "verse": 1, "text": "won", "syllabic": "begin" }] },
+                    { "pitches": ["E4"], "duration": 480, "type": "quarter", "lyrics": [{ "verse": 1, "text": "der", "syllabic": "end" }] }
+                  ]
+                }
+              ]
+            },
+            {
+              "voices": [
+                {
+                  "id": "v1",
+                  "events": [
+                    { "pitches": ["D4"], "duration": 480, "type": "quarter", "lyrics": [{ "verse": 1, "text": "what", "syllabic": "single" }] },
+                    { "pitches": ["D4"], "duration": 480, "type": "quarter", "lyrics": [{ "verse": 1, "text": "you", "syllabic": "single" }] },
+                    { "pitches": ["C4"], "duration": 960, "type": "half", "lyrics": [{ "verse": 1, "text": "are", "syllabic": "single" }] }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "bass",
+          "clef": "bass",
+          "measures": [
+            { "voices": [{ "id": "v1", "events": [{ "pitches": ["C3", "E3", "G3"], "duration": 1920, "type": "whole" }] }] },
+            { "voices": [{ "id": "v1", "events": [{ "pitches": ["F2", "A2", "C3"], "duration": 1920, "type": "whole" }] }] },
+            { "voices": [{ "id": "v1", "events": [{ "pitches": ["C3", "E3", "G3"], "duration": 1920, "type": "whole" }] }] },
+            { "voices": [{ "id": "v1", "events": [{ "pitches": ["G2", "B2", "F3"], "duration": 1920, "type": "whole" }] }] }
+          ]
+        }
+      ]
+    }
+  ]
+}
